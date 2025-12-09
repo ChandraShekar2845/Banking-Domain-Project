@@ -149,4 +149,6 @@ def main(msg: func.ServiceBusMessage):
     logging.info(f"Fraud Alerts Inserted: {fraud_count}")
     logging.info("Processing Completed Successfully!")
     logging.info("QueueProcessor Triggered - V2 deployment Test")
+    logging.info("CI/CD Pipeline Test Deployment")
+
 

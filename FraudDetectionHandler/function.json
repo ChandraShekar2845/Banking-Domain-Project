@@ -1,0 +1,25 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "event",
+      "type": "eventGridTrigger",
+      "direction": "in"
+    },
+    {
+      "name": "fraudAlertOut",
+      "type": "cosmosDB",
+      "direction": "out",
+      "connectionStringSetting": "COSMOS_CONN_STR",
+      "databaseName": "bankdb",
+      "collectionName": "FraudAlerts"
+    },
+    {
+      "name": "serviceBusMsg",
+      "type": "serviceBus",
+      "direction": "out",
+      "queueName": "fraud-alerts",
+      "connection": "SERVICEBUS_CONN_STR"
+    }
+  ]
+}

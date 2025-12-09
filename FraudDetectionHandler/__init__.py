@@ -64,4 +64,5 @@ def main(event: func.EventGridEvent,
     serviceBusMsg.set(json.dumps(sb_msg))
 
     logging.info("Fraud alert created and queued for notification")
+    logging.info("CI/CD Test Deployment for Functions")
 

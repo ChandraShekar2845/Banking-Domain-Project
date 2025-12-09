@@ -1,0 +1,41 @@
+name: Databricks Notebooks CI/CD
+
+on:
+  push:
+    paths:
+      - "notebooks/**"
+    branches:
+      - main
+
+jobs:
+  sync-notebooks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        run: |
+          pip install databricks-cli
+
+      - name: Configure Databricks profile
+        run: |
+          mkdir -p ~/.databricks
+          cat > ~/.databricks/databrickscfg <<EOF
+          [DEFAULT]
+          host = $DATABRICKS_HOST
+          token = $DATABRICKS_TOKEN
+          EOF
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_TARGET_PATH: ${{ secrets.DATABRICKS_TARGET_PATH }}
+
+      - name: Import notebooks to workspace
+        run: |
+          # Adjust this if your notebooks are .py / .dbc etc.
+          databricks workspace import_dir \
+            notebooks \
+            /Repos/azure-bank/notebooks \
+            --overwrite

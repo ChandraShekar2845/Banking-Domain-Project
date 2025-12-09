@@ -47,19 +47,18 @@ def detect_suspicious(txn):
 
 
 def main(msg: func.ServiceBusMessage):
-    logging.info("🔥 QueueProcessor started")
+    logging.info("QueueProcessor started")
 
     payload = msg.get_body().decode()
-    logging.info(f"➡️ Received payload: {payload}")
+    logging.info(f"Received payload: {payload}")
 
     event = json.loads(payload)
     blob_url = event.get("blob_url")
 
     if not blob_url:
-        logging.error("❌ No blob_url found in message")
+        logging.error("No blob_url found in message")
         return
 
-    # Read Environment configs
     storage_conn = os.getenv("AzureWebJobsStorage")
     cosmos_conn = os.getenv("COSMOS_CONN_STRING")
 
@@ -68,24 +67,21 @@ def main(msg: func.ServiceBusMessage):
     upi_container_name = os.getenv("COSMOS_UPI_CONTAINER")
     alert_container_name = os.getenv("COSMOS_ALERTS_CONTAINER")
 
-    logging.info("🔐 Loaded environment settings successfully")
+    logging.info("Loaded environment settings successfully")
 
-    # Extract container and blob name
     parts = blob_url.replace("https://", "").split("/")
     container_name = parts[1]
     blob_name = "/".join(parts[2:])
 
-    logging.info(f"📌 Blob Stored — Container: {container_name}, File: {blob_name}")
+    logging.info(f"Blob Stored — Container: {container_name}, File: {blob_name}")
 
-    # Connect to Blob and download data
     blob_service = BlobServiceClient.from_connection_string(storage_conn)
     blob_client = blob_service.get_blob_client(container=container_name, blob=blob_name)
     blob_data = blob_client.download_blob().readall()
 
     df = pd.read_csv(StringIO(blob_data.decode()))
-    logging.info(f"📄 Total Records: {df.shape[0]}")
+    logging.info(f"Total Records: {df.shape[0]}")
 
-    # Connect to Cosmos
     cosmos = CosmosClient.from_connection_string(cosmos_conn)
     database = cosmos.get_database_client(db_name)
 
@@ -93,9 +89,8 @@ def main(msg: func.ServiceBusMessage):
     upi_container = database.get_container_client(upi_container_name)
     alert_container = database.get_container_client(alert_container_name)
 
-    # Detect file type
     txn_type = classify_transaction(blob_name)
-    logging.info(f"📌 File Detected as Transaction Type: {txn_type}")
+    logging.info(f"File Detected as Transaction Type: {txn_type}")
 
     inserted_count = 0
     fraud_count = 0
@@ -103,7 +98,6 @@ def main(msg: func.ServiceBusMessage):
     for _, row in df.iterrows():
         doc = row.to_dict()
 
-        # Fix ID — handles ATM + UPI uniquely
         txn_id = (
             doc.get("TransactionID") or
             doc.get("TxnID") or
@@ -114,7 +108,6 @@ def main(msg: func.ServiceBusMessage):
         doc["id"] = str(txn_id)
         doc["txn_type"] = txn_type
 
-        # Normalize amount field
         amount = (
             doc.get("TransactionAmount") or
             doc.get("Amount") or
@@ -125,11 +118,11 @@ def main(msg: func.ServiceBusMessage):
         doc["Amount"] = float(amount)
         doc["processedAt"] = datetime.utcnow().isoformat()
 
-        # Fraud Detection
+
         flags = detect_suspicious(doc)
         doc["fraud_flags"] = flags
 
-        # Insert based on type
+
         if txn_type == "ATM":
             atm_container.upsert_item(doc)
 
@@ -138,12 +131,11 @@ def main(msg: func.ServiceBusMessage):
 
         inserted_count += 1
 
-        # Insert alert records
         if flags:
             for f in flags:
                 alert_doc = {
                     "id": f"{doc['id']}_{f}",
-                    "alertType": f,  # partition key
+                    "alertType": f,  
                     "txn_id": doc["id"],
                     "amount": doc["Amount"],
                     "txnType": txn_type,
@@ -153,6 +145,6 @@ def main(msg: func.ServiceBusMessage):
                 alert_container.upsert_item(alert_doc)
                 fraud_count += 1
 
-    logging.info(f"🚀 Inserted Transactions: {inserted_count}")
-    logging.info(f"🚨 Fraud Alerts Inserted: {fraud_count}")
-    logging.info("🎯 Processing Completed Successfully!")
+    logging.info(f"Inserted Transactions: {inserted_count}")
+    logging.info(f"Fraud Alerts Inserted: {fraud_count}")
+    logging.info("Processing Completed Successfully!")

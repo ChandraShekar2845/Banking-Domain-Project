@@ -12,7 +12,6 @@ def main(event: func.EventGridEvent):
         txn = doc.to_dict()
         amount = txn.get("amount", 0)
 
-        # only high-value
         if amount >= 50000:
             event = {
                 "id": txn.get("transaction_id"),

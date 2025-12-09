@@ -8,7 +8,7 @@ def main(event: func.EventGridEvent,
          fraudAlertOut: func.Out[func.Document],
          serviceBusMsg: func.Out[str]) -> None:
 
-    logging.info("🔔 FraudDetectionHandler triggered")
+    logging.info("FraudDetectionHandler triggered")
 
     data = event.get_json()
     amount = data.get("amount", 0)
@@ -17,7 +17,6 @@ def main(event: func.EventGridEvent,
     device_id = data.get("device_id")
     txn_time_str = data.get("txn_timestamp")
 
-    # very simple parsing
     try:
         txn_time = dt.datetime.fromisoformat(txn_time_str.replace("Z", ""))
     except Exception:
@@ -25,17 +24,12 @@ def main(event: func.EventGridEvent,
 
     rules_triggered = []
 
-    # Rule 1: odd time
     if txn_time.hour < 6 or txn_time.hour > 22:
         rules_triggered.append("Odd login/txn time")
 
-    # Rule 2: amount is huge (already high value but tag severity)
     if amount >= 100000:
         rules_triggered.append("Very high amount")
 
-    # Rule 3: example rule placeholder (device/location check)
-    # in real case you would query history from SQL or Cosmos,
-    # but for project report you can just log it.
     if location not in ["HYDERABAD", "VIJAYAWADA"]:
         rules_triggered.append("Unusual location")
 
@@ -58,10 +52,8 @@ def main(event: func.EventGridEvent,
         "source": "RealTimeEngine"
     }
 
-    # Write to Cosmos FraudAlerts
     fraudAlertOut.set(func.Document.from_dict(alert_doc))
 
-    # Send notification message to Service Bus
     sb_msg = {
         "alert_id": alert_id,
         "customer_id": customer_id,
@@ -71,5 +63,5 @@ def main(event: func.EventGridEvent,
     }
     serviceBusMsg.set(json.dumps(sb_msg))
 
-    logging.info("🚨 Fraud alert created and queued for notification")
+    logging.info("Fraud alert created and queued for notification")
 

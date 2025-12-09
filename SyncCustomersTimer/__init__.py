@@ -7,7 +7,7 @@ import azure.functions as func
 
 
 def main(timer: func.TimerRequest) -> None:
-    logging.info("🚀 Starting Daily Customer Sync Job...")
+    logging.info("Starting Daily Customer Sync Job...")
 
     try:
         conn_str = os.getenv("SQL_CONN_STR")
@@ -35,8 +35,8 @@ def main(timer: func.TimerRequest) -> None:
         cursor.close()
         conn.close()
 
-        logging.info("🎯 SUCCESS: DimCustomer updated successfully!")
+        logging.info("SUCCESS: DimCustomer updated successfully!")
 
     except Exception as e:
-        logging.error(f"❌ ERROR in Customer Sync: {e}")
+        logging.error(f"ERROR in Customer Sync: {e}")
 

@@ -29,7 +29,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Optional – run tests if you have them
+
       - name: Run tests
         run: |
           if [ -f "tests/__init__.py" ]; then
@@ -45,4 +45,4 @@ jobs:
           app-name: "azurebankfunctionapp"        
           package: "."                               
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          # slot-name: "staging"    
+          slot-name: "staging"    

@@ -148,3 +148,5 @@ def main(msg: func.ServiceBusMessage):
     logging.info(f"Inserted Transactions: {inserted_count}")
     logging.info(f"Fraud Alerts Inserted: {fraud_count}")
     logging.info("Processing Completed Successfully!")
+    logging.info("QueueProcessor Triggered - V2 deployment Test")
+
